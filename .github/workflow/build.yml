@@ -1,31 +1,46 @@
-cmake_minimum_required(VERSION 3.5)
+name: Build & Release Vita VPK
 
-project(vita_browser)
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
-include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-q -Wall -O3")
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-add_executable(vita_browser
-    src/main.c
-)
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git cmake build-essential python3
 
-target_link_libraries(vita_browser
-    vita2d
-    SceCtrl_stub
-    SceDisplay_stub
-    SceGxm_stub
-    SceSysmodule_stub
-    SceTouch_stub
-    SceHttp_stub
-    SceNet_stub
-    SceNetCtl_stub
-    SceKernel_stub
-)
+      - name: Install VitaSDK
+        run: |
+          git clone https://github.com/vitasdk/vdpm.git
+          cd vdpm
+          ./bootstrap-vitasdk.sh
+          ./install-all.sh
 
-vita_create_self(eboot.bin vita_browser UNSAFE)
+      - name: Build project
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
 
-vita_create_vpk(vita_browser.vpk "VITABRWS" eboot.bin
-    VERSION "01.00"
-    NAME "Vita Browser"
-)
+      - name: Get version tag
+        id: vars
+        run: echo "version=1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.vars.outputs.version }}
+          name: Vita Browser v${{ steps.vars.outputs.version }}
+          files: build/*.vpk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
