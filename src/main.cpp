@@ -1,6 +1,5 @@
-#include <psp2/kernel/processmgr.h>
 #include <psp2/appmgr.h>
-#include <psp2/display.h>
+#include <psp2/kernel/processmgr.h>
 
 int main()
 {
