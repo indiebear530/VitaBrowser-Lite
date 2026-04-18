@@ -1,60 +1,44 @@
-name: Vita Build (Stable Template)
+name: Vita Build
 
 on:
-  workflow_dispatch:
   push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y cmake ninja-build build-essential git python3
+    - name: Set up Vita SDK
+      uses: vitasdk/docker-action@v1
+      with:
+        version: latest   # or "stable" if you prefer
 
-    - name: Install VitaSDK
+    - name: Configure CMake
       run: |
-        git clone https://github.com/vitasdk/vdpm.git
-        cd vdpm
-        chmod +x bootstrap-vitasdk.sh
-        ./bootstrap-vitasdk.sh
-
-    - name: Setup VitaSDK env
-      run: |
-        echo "VITASDK=$HOME/vitasdk" >> $GITHUB_ENV
-        echo "$HOME/vitasdk/bin" >> $GITHUB_PATH
-
-    - name: Configure
-      run: |
-        mkdir build
+        mkdir -p build
         cd build
-        cmake ..
+        cmake .. -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake \
+                 -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
       run: |
         cd build
-        make -j2
+        make -j$(nproc)
 
-    - name: Create param.sfo
-      run: |
-        vita-mksfoex -s TITLE_ID=VITB00001 "VitaBrowser Lite" build/param.sfo
-
-    - name: Package VPK
+    - name: Create VPK
       run: |
         cd build
-        vita-pack-vpk eboot.bin \
-          -s param.sfo \
-          -i ../sce_sys/icon0.png \
-          ../sce_sys/ \
-          VitaBrowser.vpk
+        make vpk   # This assumes your CMakeLists.txt has vita_create_vpk
 
-    - name: Upload VPK
+    - name: Upload VPK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: VitaBrowser-VPK
+        name: VitaBrowser-Lite-vpk
         path: build/*.vpk
