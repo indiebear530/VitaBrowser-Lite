@@ -1,16 +1,16 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
-project(VitaBrowserLite)
+project(VitaBrowserLite LANGUAGES CXX)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
-    SceAppUtil_stub
-    SceNet_stub
-    SceHttp_stub
-    SceSsl_stub
+    SceAppMgr_stub
+    SceProcessmgr_stub
 )
