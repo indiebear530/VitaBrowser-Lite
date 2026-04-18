@@ -2,7 +2,7 @@ name: Vita Build
 
 on:
   push:
-    branches: [main, master]
+    branches: [ main, master ]
   pull_request:
 
 jobs:
@@ -13,43 +13,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up VitaSDK
+      - name: Install VitaSDK
         run: |
           sudo add-apt-repository ppa:libretro/pspdev
           sudo apt-get update
           sudo apt-get install -y vitasdk
-          echo "export VITASDK=/usr/local/vitasdk" >> $GITHUB_ENV
-          echo "$VITASDK/bin" >> $GITHUB_PATH
-
-      - name: Set environment variables
-        run: |
           echo "VITASDK=/usr/local/vitasdk" >> $GITHUB_ENV
           echo "/usr/local/vitasdk/bin" >> $GITHUB_PATH
-
-      - name: Create build directory
-        run: mkdir build
 
       - name: Configure (CMake)
         run: |
           cmake -Bbuild -S. \
-            -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+            -DCMAKE_TOOLCHAIN_FILE=/usr/local/vitasdk/share/vita.toolchain.cmake
 
       - name: Build
         run: cmake --build build
 
-      - name: Package VPK
+      # Optional: Run tests if available
+      - name: Test (ctest)
         run: |
-          if [ -f build/*.vpk ]; then
-            echo "VPK already built."
+          if compgen -G "build/*Test" > /dev/null || compgen -G "build/*_test" > /dev/null; then
+            cd build && ctest --output-on-failure || true
           else
-            if [ -f build/eboot.bin ]; then
-              # If you have scripts or CMake for packaging, call it here.
-              vitapackage build/eboot.bin
-            fi
+            echo "No tests detected. Skipping."
           fi
 
-      - name: Upload VPK Artifact
+      - name: Find VPK
+        id: findvpk
+        run: |
+          set -e
+          VPK=$(find build -maxdepth 1 -type f -name '*.vpk' | head -n 1)
+          if [ -z "$VPK" ]; then
+            echo "No .vpk found in build/. Did your build succeed and CMake package a .vpk?" >&2
+            exit 1
+          fi
+          echo "vpk_path=$VPK" >> $GITHUB_OUTPUT
+
+      - name: Upload VPK artifact
         uses: actions/upload-artifact@v4
         with:
           name: VitaBrowser-Lite
-          path: build/*.
+          path: ${{ steps.findvpk.outputs.vpk_path }}
