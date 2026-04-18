@@ -1,15 +1,11 @@
-- name: Install VitaSDK
+- name: Install VitaSDK (stable)
   run: |
     export VITASDK=/usr/local/vitasdk
     echo "VITASDK=$VITASDK" >> $GITHUB_ENV
 
     sudo mkdir -p $VITASDK
-    sudo chown -R $USER $VITASDK
 
-    git clone https://github.com/vitasdk/autobuilds.git
-    cd autobuilds
-
-    ./bootstrap-vitasdk.sh
-    ./install-all.sh
+    wget https://github.com/vitasdk/autobuilds/releases/latest/download/vitasdk-x86_64-linux-gnu.tar.xz
+    tar -xf vitasdk-x86_64-linux-gnu.tar.xz -C $VITASDK --strip-components=1
 
     echo "$VITASDK/bin" >> $GITHUB_PATH
