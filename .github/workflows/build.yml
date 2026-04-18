@@ -1,13 +1,60 @@
-<?xml version="1.0" encoding="utf-8"?>
-<livearea>
-    <screen>
-        <livearea style="a">
-            <background>
-                <image src="bg.png"/>
-            </background>
-            <start>
-                <image src="startup.png"/>
-            </start>
-        </livearea>
-    </screen>
-</livearea>
+name: Vita Build (Stable Template)
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y cmake ninja-build build-essential git python3
+
+    - name: Install VitaSDK
+      run: |
+        git clone https://github.com/vitasdk/vdpm.git
+        cd vdpm
+        chmod +x bootstrap-vitasdk.sh
+        ./bootstrap-vitasdk.sh
+
+    - name: Setup VitaSDK env
+      run: |
+        echo "VITASDK=$HOME/vitasdk" >> $GITHUB_ENV
+        echo "$HOME/vitasdk/bin" >> $GITHUB_PATH
+
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+
+    - name: Build
+      run: |
+        cd build
+        make -j2
+
+    - name: Create param.sfo
+      run: |
+        vita-mksfoex -s TITLE_ID=VITB00001 "VitaBrowser Lite" build/param.sfo
+
+    - name: Package VPK
+      run: |
+        cd build
+        vita-pack-vpk eboot.bin \
+          -s param.sfo \
+          -i ../sce_sys/icon0.png \
+          ../sce_sys/ \
+          VitaBrowser.vpk
+
+    - name: Upload VPK
+      uses: actions/upload-artifact@v4
+      with:
+        name: VitaBrowser-VPK
+        path: build/*.vpk
