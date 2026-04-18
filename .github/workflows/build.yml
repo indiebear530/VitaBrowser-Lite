@@ -1,25 +1,18 @@
-name: Build inside VitaSDK Docker
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: vitasdk/vitasdk:latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Build (VitaSDK Docker)
-        uses: addnab/docker-run-action@v3
-        with:
-          image: vitasdk/vitasdk:latest
-          options: -v ${{ github.workspace }}:/workspace
-          run: |
-            cd /workspace
-            mkdir -p build && cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release
-            make -j$(nproc)
-            make vpk    # or "make" if that's enough
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up VitaSDK environment variables
+        run: echo "VITASDK=/opt/vitasdk" >> $GITHUB_ENV
+
+      - name: Configure and Build
+        run: |
+          cmake -Bbuild -S. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+          cmake --build build
+        env:
+          VITASDK: ${{ env.VITASDK }}
