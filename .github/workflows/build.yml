@@ -1,8 +1,4 @@
-wget https://github.com/vitasdk/vdpm/releases/latest/download/vdpm
-chmod +x vdpm
-./vdpm install vitasdk
-
-name: Vita Build (Stable Template)
+wget name: Vita Build (Stable Template)
 
 on:
   workflow_dispatch:
