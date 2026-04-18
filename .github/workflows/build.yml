@@ -1,37 +1,11 @@
-name: Vita Build
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Vita SDK
-      uses: vitasdk/docker-action@v1
-      with:
-        version: latest
-
-    - name: Configure CMake
-      run: |
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
-
-    - name: Build
-      run: cd build && make -j$(nproc)
-
-    - name: Create VPK
-      run: cd build && make vpk   # or just "make" if you want everything
-
-    - name: Upload VPK
-      uses: actions/upload-artifact@v4
-      with:
-        name: VitaBrowser-Lite
-        path: build/*.vpk
+- name: Build inside VitaSDK Docker
+  uses: addnab/docker-run-action@v3
+  with:
+    image: vitasdk/vitasdk:latest
+    options: -v ${{ github.workspace }}:/workspace
+    run: |
+      cd /workspace
+      mkdir -p build && cd build
+      cmake .. -DCMAKE_BUILD_TYPE=Release
+      make -j$(nproc)
+      make vpk    # or "make" if that's enough
