@@ -1,3 +1,10 @@
+name: CI-Build
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
 name: VitaSDK build
 
 on:
@@ -13,10 +20,21 @@ jobs:
   build-vpk:
     runs-on: ubuntu-latest
 
+    # Use the official VitaSDK container image directly.
+    # This avoids brittle "download latest release asset" parsing.
+    container:
+      image: vitasdk/vitasdk:latest
+
+    env:
+      VITASDK: /usr/local/vitasdk
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Show VitaSDK toolchain versions
+        run: |
+          echo "VITASDK=$VITASDK"
       - name: Install official latest stable VitaSDK
         run: |
           set -euo pipefail
@@ -49,6 +67,11 @@ jobs:
 
       - name: Build
         run: cmake --build build -- -j"$(nproc)"
+
+      - name: Check expected outputs
+        run: |
+          test -f build/eboot.bin
+          test -f build/VitaBrowserLite.vpk
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
