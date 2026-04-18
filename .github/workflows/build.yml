@@ -1,0 +1,42 @@
+name: CI-Build
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-vpk:
+    runs-on: ubuntu-latest
+    container:
+      # Official VitaSDK image from the vitasdk organization.
+      image: vitasdk/vitasdk:latest
+    env:
+      VITASDK: /usr/local/vitasdk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show VitaSDK toolchain versions
+        run: |
+          arm-vita-eabi-gcc --version
+          cmake --version
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+
+      - name: Build
+        run: cmake --build build -- -j"$(nproc)"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: VitaBrowserLite-build
+          path: |
+            build/eboot.bin
+            build/VitaBrowserLite.vpk
