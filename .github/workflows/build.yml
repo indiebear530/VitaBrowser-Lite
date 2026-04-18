@@ -5,8 +5,10 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   VITASDK: /usr/local/vitasdk
 
 jobs:
@@ -18,7 +20,7 @@ jobs:
       # Checkout (Node 24 safe)
       # ----------------------------
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       # ----------------------------
       # System dependencies
@@ -32,7 +34,7 @@ jobs:
       # Cache ccache (FAST BUILDS)
       # ----------------------------
       - name: Cache ccache
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.ccache
           key: ccache-${{ runner.os }}-${{ github.ref_name }}
@@ -43,7 +45,7 @@ jobs:
       # Cache build folder (SAFE)
       # ----------------------------
       - name: Cache build folder
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: build
           key: build-${{ runner.os }}-${{ github.ref_name }}
