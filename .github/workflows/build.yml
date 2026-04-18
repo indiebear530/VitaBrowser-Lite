@@ -23,6 +23,17 @@ jobs:
         uses: actions/checkout@v4
 
       # ----------------------------
+      # Sanity: reject merge markers
+      # ----------------------------
+      - name: Check for unresolved merge conflict markers
+        run: |
+          if rg -n "^(<<<<<<<|=======|>>>>>>>)" . --glob '!.git'; then
+            echo "Unresolved merge conflict markers found."
+            exit 1
+          fi
+          echo "No unresolved merge conflict markers found."
+
+      # ----------------------------
       # System dependencies
       # ----------------------------
       - name: Install dependencies
