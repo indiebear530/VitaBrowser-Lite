@@ -1,62 +1,48 @@
 #include <psp2/kernel/processmgr.h>
-#include <psp2/appmgr.h>
 #include <psp2/ctrl.h>
-#include <psp2/net/net.h>
-#include <psp2/net/netctl.h>
-#include <psp2/http.h>
 #include <psp2/display.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <vita2d.h>
 
-#define MEMORY_POOL_SIZE (4 * 1024 * 1024)
+#include <stdio.h>
 
 int main()
 {
-    int ret;
+    // Initialize graphics
+    vita2d_init();
+    vita2d_set_clear_color(RGBA8(0, 0, 0, 255));  // Black background
 
-    // Init network
-    sceNetInit();
-    sceNetCtlInit();
+    // Load default font (built into vita2d)
+    vita2d_pgf *pgf = vita2d_load_default_pgf();
 
-    // Wait for Wi-Fi connection (you may need to connect manually first)
-    int state;
-    do {
-        sceNetCtlGetState(&state);
-        sceKernelDelayThread(100 * 1000);
-    } while (state != SCE_NETCTL_STATE_CONNECTED);
+    SceCtrlData pad;
 
-    // Init HTTP
-    SceHttpInitParam httpInitParam;
-    memset(&httpInitParam, 0, sizeof(SceHttpInitParam));
-    httpInitParam.httpPoolSize = MEMORY_POOL_SIZE;
-    ret = sceHttpInit(&httpInitParam);
-    if (ret < 0) {
-        // error handling
-    }
-
-    // Create template + connection + request (very basic GET example)
-    int tpl = sceHttpCreateTemplate("VitaBrowserLite/1.0", 1, 1);
-    int conn = sceHttpCreateConnectionWithURL(tpl, "http://example.com", 0);
-    int req = sceHttpCreateRequestWithURL(conn, SCE_HTTP_METHOD_GET, "http://example.com", 0);
-
-    sceHttpSendRequest(req, NULL, 0);
-
-    // TODO: Read response with sceHttpReadData() in a loop...
-
-    // For now just loop until START is pressed
     while (1) {
-        SceCtrlData pad;
-        sceCtrlReadBufferPositive(0, &pad, 1);
-        if (pad.buttons & SCE_CTRL_START) break;
+        sceCtrlPeekBufferPositive(0, &pad, 1);
 
+        // Exit on START
+        if (pad.buttons & SCE_CTRL_START) {
+            break;
+        }
+
+        vita2d_start_drawing();
+        vita2d_clear_screen();
+
+        // Draw title text
+        vita2d_pgf_draw_text(pgf, 100, 100, RGBA8(255, 255, 255, 255), 1.0f, "VitaBrowser Lite");
+        vita2d_pgf_draw_text(pgf, 100, 150, RGBA8(200, 200, 255, 255), 0.8f, "Press START to exit");
+
+        // Simple status line
+        vita2d_pgf_draw_text(pgf, 100, 250, RGBA8(100, 255, 100, 255), 0.7f, "Ready for networking...");
+
+        vita2d_end_drawing();
+        vita2d_swap_buffers();
         sceDisplayWaitVblankStart();
     }
 
-    sceHttpTerm();
-    sceNetCtlTerm();
-    sceNetTerm();
+    // Cleanup
+    vita2d_free_pgf(pgf);
+    vita2d_fini();
 
     sceAppMgrFinish(0);
     sceKernelExitProcess(0);
