@@ -1,49 +1,15 @@
-name: Build Vita VPK
+- name: Install VitaSDK
+  run: |
+    export VITASDK=/usr/local/vitasdk
+    echo "VITASDK=$VITASDK" >> $GITHUB_ENV
 
-on:
-  push:
-  workflow_dispatch:
+    sudo mkdir -p $VITASDK
+    sudo chown -R $USER $VITASDK
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+    git clone https://github.com/vitasdk/autobuilds.git
+    cd autobuilds
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    ./bootstrap-vitasdk.sh
+    ./install-all.sh
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git cmake build-essential wget xz-utils
-
-      - name: Install VitaSDK (FIXED METHOD)
-        run: |
-          export VITASDK=/usr/local/vitasdk
-          echo "VITASDK=$VITASDK" >> $GITHUB_ENV
-
-          sudo mkdir -p $VITASDK
-          sudo chown -R $USER $VITASDK
-
-          wget https://github.com/vitasdk/autobuilds/releases/latest/download/vitasdk-x86_64-linux-gnu.tar.xz
-          tar -xf vitasdk-x86_64-linux-gnu.tar.xz -C $VITASDK --strip-components=1
-
-          echo "$VITASDK/bin" >> $GITHUB_PATH
-
-      - name: Verify SDK
-        run: |
-          cmake --version
-          arm-vita-eabi-gcc --version
-
-      - name: Build project
-        run: |
-          mkdir build
-          cd build
-          cmake ..
-          make -j2
-
-      - name: Upload VPK
-        uses: actions/upload-artifact@v4
-        with:
-          name: vita-browser
-          path: build/*.vpk
+    echo "$VITASDK/bin" >> $GITHUB_PATH
