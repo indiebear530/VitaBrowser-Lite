@@ -13,15 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install VitaSDK
+       - name: Install VitaSDK
         run: |
-          sudo add-apt-repository ppa:libretro/pspdev
-          sudo apt-get update
-          sudo apt-get install -y vitasdk
-          echo "VITASDK=/usr/local/vitasdk" >> $GITHUB_ENV
-          echo "/usr/local/vitasdk/bin" >> $GITHUB_PATH
-
-      - name: Configure (CMake)
+          wget https://github.com/vitasdk/autobuilds/releases/download/master/vitasdk-latest-linux.tar.gz
+          tar xzf vitasdk-latest-linux.tar.gz -C /opt/
+          echo "VITASDK=/opt/vitasdk" >> $GITHUB_ENV
+          echo "/opt/vitasdk/bin" >> $GITHUB_PATH     - name: Configure (CMake)
         run: |
           cmake -Bbuild -S. \
             -DCMAKE_TOOLCHAIN_FILE=/usr/local/vitasdk/share/vita.toolchain.cmake
