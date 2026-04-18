@@ -1,105 +1,57 @@
-name: Build & Release Vita Browser VPK
+name: Build Vita VPK
 
 on:
   push:
-    branches: [ "main", "master" ]
   workflow_dispatch:
-
-permissions:
-  contents: write
-
-env:
-  VITASDK: /usr/local/vitasdk
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------
-      # Checkout (Node 24 safe)
-      # ----------------------------
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      # ----------------------------
-      # System dependencies
-      # ----------------------------
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git cmake build-essential wget xz-utils ccache
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y cmake ninja-build build-essential git python3
 
-      # ----------------------------
-      # Cache ccache (FAST BUILDS)
-      # ----------------------------
-      - name: Cache ccache
-        uses: actions/cache@v4
-        with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ github.ref_name }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
+    - name: Install VitaSDK
+      run: |
+        git clone https://github.com/vitasdk/vdpm.git
+        cd vdpm
+        chmod +x bootstrap-vitasdk.sh
+        ./bootstrap-vitasdk.sh
 
-      # ----------------------------
-      # Cache build folder (SAFE)
-      # ----------------------------
-      - name: Cache build folder
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: build-${{ runner.os }}-${{ github.ref_name }}
-          restore-keys: |
-            build-${{ runner.os }}-
+    - name: Set VitaSDK env
+      run: |
+        echo "VITASDK=$HOME/vitasdk" >> $GITHUB_ENV
+        echo "$HOME/vitasdk/bin" >> $GITHUB_PATH
 
-      # ----------------------------
-      # Install VitaSDK (stable)
-      # ----------------------------
-      - name: Install VitaSDK
-        run: |
-          sudo mkdir -p $VITASDK
+    - name: Configure build
+      run: |
+        mkdir -p build
+        cd build
+        cmake ..
 
-          wget -q https://github.com/vitasdk/autobuilds/releases/latest/download/vitasdk-x86_64-linux-gnu.tar.xz
-          sudo tar -xf vitasdk-x86_64-linux-gnu.tar.xz -C $VITASDK --strip-components=1
+    - name: Build project
+      run: |
+        cd build
+        make -j2
 
-          echo "$VITASDK/bin" >> $GITHUB_PATH
+    - name: Package VPK
+      run: |
+        cd build
+        vita-mksfoex -s TITLE_ID=VITB00001 "VitaBrowser Lite" param.sfo
+        vita-pack-vpk eboot.bin \
+          -s param.sfo \
+          -i ../sce_sys/icon0.png \
+          ../sce_sys/ \
+          VitaBrowser.vpk
 
-      # ----------------------------
-      # Verify toolchain
-      # ----------------------------
-      - name: Verify VitaSDK
-        run: |
-          arm-vita-eabi-gcc --version
-
-      # ----------------------------
-      # Build (ccache enabled)
-      # ----------------------------
-      - name: Build
-        run: |
-          export PATH="/usr/lib/ccache:$PATH"
-
-          mkdir -p build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
-
-      # ----------------------------
-      # Upload artifact backup
-      # ----------------------------
-      - name: Upload VPK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vita-browser
-          path: build/*.vpk
-
-      # ----------------------------
-      # Auto GitHub Release
-      # ----------------------------
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Vita Browser v1.0.${{ github.run_number }}
-          files: build/*.vpk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload VPK
+      uses: actions/upload-artifact@v4
+      with:
+        name: VitaBrowser-VPK
+        path: build/*.vpk
