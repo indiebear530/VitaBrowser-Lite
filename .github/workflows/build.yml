@@ -19,7 +19,7 @@ jobs:
           tar xzf vitasdk-latest-linux.tar.gz -C /opt/
           echo "VITASDK=/opt/vitasdk" >> $GITHUB_ENV
           echo "/opt/vitasdk/bin" >> $GITHUB_PATH     - name: Configure (CMake)
-         run: |
+          run: |
           cmake -Bbuild -S. \
             -DCMAKE_TOOLCHAIN_FILE=/usr/local/vitasdk/share/vita.toolchain.cmake
 
