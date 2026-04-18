@@ -11,12 +11,10 @@ add_executable(vita_browser
 )
 
 target_link_libraries(vita_browser
-    vita2d
     SceCtrl_stub
     SceDisplay_stub
-    SceGxm_stub
-    SceSysmodule_stub
     SceTouch_stub
+    SceCommonDialog_stub
     SceIme_stub
     SceHttp_stub
     SceNet_stub
