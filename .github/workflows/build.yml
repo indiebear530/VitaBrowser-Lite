@@ -21,9 +21,9 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/opt/vitasdk/share/vita.toolchain.cmake
           make -j$(nproc)
-          make vpk || true   # Ignore error if vpk is not defined, adjust as needed
+          make vpk || true
 
       - name: Upload VPK
         uses: actions/upload-artifact@v4
