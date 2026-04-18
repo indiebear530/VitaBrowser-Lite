@@ -1,4 +1,4 @@
-name: CI-Build
+name: Build VitaSDK
 
 on:
   pull_request:
