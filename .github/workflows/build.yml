@@ -1,8 +1,7 @@
-name: Build & Release Vita VPK
+name: Build Vita VPK
 
 on:
   push:
-    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -16,31 +15,35 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git cmake build-essential python3
+          sudo apt-get install -y git cmake build-essential wget xz-utils
 
-      - name: Install VitaSDK
+      - name: Install VitaSDK (FIXED METHOD)
         run: |
-          git clone https://github.com/vitasdk/vdpm.git
-          cd vdpm
-          ./bootstrap-vitasdk.sh
-          ./install-all.sh
+          export VITASDK=/usr/local/vitasdk
+          echo "VITASDK=$VITASDK" >> $GITHUB_ENV
+
+          sudo mkdir -p $VITASDK
+          sudo chown -R $USER $VITASDK
+
+          wget https://github.com/vitasdk/autobuilds/releases/latest/download/vitasdk-x86_64-linux-gnu.tar.xz
+          tar -xf vitasdk-x86_64-linux-gnu.tar.xz -C $VITASDK --strip-components=1
+
+          echo "$VITASDK/bin" >> $GITHUB_PATH
+
+      - name: Verify SDK
+        run: |
+          cmake --version
+          arm-vita-eabi-gcc --version
 
       - name: Build project
         run: |
           mkdir build
           cd build
           cmake ..
-          make
+          make -j2
 
-      - name: Get version tag
-        id: vars
-        run: echo "version=1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload VPK
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: v${{ steps.vars.outputs.version }}
-          name: Vita Browser v${{ steps.vars.outputs.version }}
-          files: build/*.vpk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: vita-browser
+          path: build/*.vpk
