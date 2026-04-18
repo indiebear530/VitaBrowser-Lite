@@ -1,8 +1,13 @@
-name: Build Vita VPK
+name: Build & Release Vita VPK
 
 on:
   push:
+    branches: [ "main", "master" ]
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  VITASDK: /usr/local/vitasdk
 
 jobs:
   build:
@@ -10,38 +15,55 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Install dependencies
+      # ⚡ Cache VitaSDK (HUGE speed boost after first run)
+      - name: Cache VitaSDK
+        id: cache-vitasdk
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VITASDK }}
+          key: vitasdk-${{ runner.os }}-v1
+
+      # 📦 Install VitaSDK ONLY if cache is missing
+      - name: Install VitaSDK
+        if: steps.cache-vitasdk.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git cmake build-essential wget xz-utils
-
-      - name: Install VitaSDK (STABLE)
-        run: |
-          export VITASDK=/usr/local/vitasdk
-          echo "VITASDK=$VITASDK" >> $GITHUB_ENV
-
           sudo mkdir -p $VITASDK
+          wget -q https://github.com/vitasdk/autobuilds/releases/latest/download/vitasdk-x86_64-linux-gnu.tar.xz
+          sudo tar -xf vitasdk-x86_64-linux-gnu.tar.xz -C $VITASDK --strip-components=1
 
-          wget https://github.com/vitasdk/autobuilds/releases/latest/download/vitasdk-x86_64-linux-gnu.tar.xz
-          tar -xf vitasdk-x86_64-linux-gnu.tar.xz -C $VITASDK --strip-components=1
-
+      # 🔧 Add SDK to PATH
+      - name: Setup environment
+        run: |
           echo "$VITASDK/bin" >> $GITHUB_PATH
 
-      - name: Verify SDK
+      # ✅ Verify toolchain (debug safety)
+      - name: Verify VitaSDK
         run: |
           arm-vita-eabi-gcc --version
 
+      # 🏗 Build project
       - name: Build
         run: |
-          mkdir build
+          mkdir -p build
           cd build
-          cmake ..
-          make -j2
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
 
-      - name: Upload VPK
+      # 📦 Upload artifact (backup access)
+      - name: Upload VPK (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: vita-browser
           path: build/*.vpk
+
+      # 🚀 Auto Release with versioning
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Vita Browser v1.0.${{ github.run_number }}
+          files: build/*.vpk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
