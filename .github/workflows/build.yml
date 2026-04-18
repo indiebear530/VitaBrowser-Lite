@@ -1,31 +1,55 @@
-name: Build VitaBrowser-Lite
+name: Vita Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [main, master]
   pull_request:
-    branches: [ master ]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: vitasdk/vitasdk:latest
-
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+      - name: Set up VitaSDK
+        run: |
+          sudo add-apt-repository ppa:libretro/pspdev
+          sudo apt-get update
+          sudo apt-get install -y vitasdk
+          echo "export VITASDK=/usr/local/vitasdk" >> $GITHUB_ENV
+          echo "$VITASDK/bin" >> $GITHUB_PATH
+
+      - name: Set environment variables
+        run: |
+          echo "VITASDK=/usr/local/vitasdk" >> $GITHUB_ENV
+          echo "/usr/local/vitasdk/bin" >> $GITHUB_PATH
+
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Configure (CMake)
+        run: |
+          cmake -Bbuild -S. \
+            -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
 
       - name: Build
-        run: cmake --build build -- -j$(nproc)
+        run: cmake --build build
 
-      - name: Upload VPK
+      - name: Package VPK
+        run: |
+          if [ -f build/*.vpk ]; then
+            echo "VPK already built."
+          else
+            if [ -f build/eboot.bin ]; then
+              # If you have scripts or CMake for packaging, call it here.
+              vitapackage build/eboot.bin
+            fi
+          fi
+
+      - name: Upload VPK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VitaBrowserLite-vpk
-          path: build/VitaBrowserLite.vpk
+          name: VitaBrowser-Lite
+          path: build/*.vpk
