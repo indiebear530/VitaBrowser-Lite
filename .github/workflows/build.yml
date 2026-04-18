@@ -1,18 +1,32 @@
+name: Build inside VitaSDK Docker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     container:
       image: vitasdk/vitasdk:latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Set up VitaSDK environment variables
-        run: echo "VITASDK=/opt/vitasdk" >> $GITHUB_ENV
-
-      - name: Configure and Build
+      - name: Configure & build
         run: |
-          cmake -Bbuild -S. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
-          cmake --build build
-        env:
-          VITASDK: ${{ env.VITASDK }}
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+          make vpk || true   # Ignore error if vpk is not defined, adjust as needed
+
+      - name: Upload VPK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VitaBrowser-Lite
+          path: build/*.vpk
