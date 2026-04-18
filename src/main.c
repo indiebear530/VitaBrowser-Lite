@@ -11,14 +11,19 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define MAX_PAGE 200000
+#define MAX_HISTORY 20
+
 static char url[256] = "http://example.com";
-static char page[200000];
+static char page[MAX_PAGE];
+
+static char history[MAX_HISTORY][256];
+static int history_index = -1;
+static int history_top = -1;
 
 static int scroll_y = 0;
-static int dragging = 0;
-static int last_y = 0;
 
-/* -------- HTTP -------- */
+/* ---------------- HTTP ---------------- */
 char* http_get(const char *u) {
     memset(page, 0, sizeof(page));
 
@@ -27,7 +32,7 @@ char* http_get(const char *u) {
     SceUID req  = sceHttpCreateRequestWithURL(conn, SCE_HTTP_METHOD_GET, u, 0);
 
     sceHttpSendRequest(req, NULL, 0);
-    sceHttpReadData(req, page, sizeof(page)-1);
+    sceHttpReadData(req, page, sizeof(page) - 1);
 
     sceHttpDeleteRequest(req);
     sceHttpDeleteConnection(conn);
@@ -36,7 +41,32 @@ char* http_get(const char *u) {
     return page;
 }
 
-/* -------- Keyboard -------- */
+/* ---------------- HISTORY ---------------- */
+void push_history(const char *u) {
+    if (history_index < MAX_HISTORY - 1) {
+        history_index++;
+        strcpy(history[history_index], u);
+        history_top = history_index;
+    }
+}
+
+void go_back() {
+    if (history_index > 0) {
+        history_index--;
+        strcpy(url, history[history_index]);
+        http_get(url);
+    }
+}
+
+void go_forward() {
+    if (history_index < history_top) {
+        history_index++;
+        strcpy(url, history[history_index]);
+        http_get(url);
+    }
+}
+
+/* ---------------- KEYBOARD ---------------- */
 void open_keyboard() {
     SceImeDialogParam param;
     sceImeDialogParamInit(&param);
@@ -58,13 +88,14 @@ void open_keyboard() {
 
     if (result.button == SCE_IME_DIALOG_BUTTON_ENTER) {
         strcpy(url, param.inputTextBuffer);
+        push_history(url);
         http_get(url);
     }
 
     sceImeDialogTerm();
 }
 
-/* -------- Touch -------- */
+/* ---------------- TOUCH ---------------- */
 void handle_touch() {
     SceTouchData touch;
     sceTouchPeek(SCE_TOUCH_PORT_FRONT, &touch, 1);
@@ -75,25 +106,19 @@ void handle_touch() {
         if (y < 60) {
             open_keyboard();
         } else {
-            if (!dragging) {
-                dragging = 1;
-                last_y = y;
-            } else {
-                scroll_y += (y - last_y);
-                last_y = y;
-            }
+            scroll_y += (y - 240);
         }
-    } else {
-        dragging = 0;
     }
 }
 
-/* -------- MAIN -------- */
+/* ---------------- MAIN ---------------- */
 int main() {
     sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
     sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 
     vita2d_init();
+
+    push_history(url);
     http_get(url);
 
     while (1) {
@@ -109,24 +134,38 @@ int main() {
         if (pad.buttons & SCE_CTRL_CIRCLE)
             http_get(url);
 
+        if (pad.buttons & SCE_CTRL_LTRIGGER)
+            go_back();
+
+        if (pad.buttons & SCE_CTRL_RTRIGGER)
+            go_forward();
+
         handle_touch();
 
         vita2d_start_drawing();
         vita2d_clear_screen();
 
         /* URL BAR */
-        vita2d_draw_rectangle(0, 0, 960, 60, RGBA8(20,20,20,255));
+        vita2d_draw_rectangle(0, 0, 960, 60, RGBA8(25,25,25,255));
         vita2d_draw_string(10, 20, RGBA8(255,255,0,255), url);
 
-        /* PAGE */
+        /* PAGE RENDER */
         int y = 80 + scroll_y;
+        int x = 10;
 
         for (int i = 0; page[i]; i++) {
+
             if (page[i] == '<') {
                 while (page[i] && page[i] != '>') i++;
-            } else {
-                vita2d_draw_char(10, y, RGBA8(255,255,255,255), page[i]);
-                y += 10;
+                continue;
+            }
+
+            vita2d_draw_char(x, y, RGBA8(255,255,255,255), page[i]);
+            x += 8;
+
+            if (x > 920) {
+                x = 10;
+                y += 18;
             }
         }
 
