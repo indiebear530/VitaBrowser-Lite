@@ -1,4 +1,4 @@
-name: CI-Build
+name: VitaSDK build
 
 on:
   pull_request:
@@ -57,3 +57,4 @@ jobs:
           path: |
             build/eboot.bin
             build/VitaBrowserLite.vpk
+
