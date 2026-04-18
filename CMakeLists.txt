@@ -17,6 +17,7 @@ target_link_libraries(vita_browser
     SceGxm_stub
     SceSysmodule_stub
     SceTouch_stub
+    SceIme_stub
     SceHttp_stub
     SceNet_stub
     SceNetCtl_stub
