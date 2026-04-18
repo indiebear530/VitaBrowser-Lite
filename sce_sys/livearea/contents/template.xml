@@ -1,1 +1,8 @@
+@@ -5,7 +5,6 @@
+            <background>
+                <image src="bg.png"/>
+            </background>
 
+            <start>
+                <image src="startup.png"/>
+            </start>
