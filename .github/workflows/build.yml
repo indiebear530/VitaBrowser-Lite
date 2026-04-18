@@ -13,13 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-       - name: Install VitaSDK
+      - name: Install VitaSDK
         run: |
           wget https://github.com/vitasdk/autobuilds/releases/download/master/vitasdk-latest-linux.tar.gz
           tar xzf vitasdk-latest-linux.tar.gz -C /opt/
           echo "VITASDK=/opt/vitasdk" >> $GITHUB_ENV
           echo "/opt/vitasdk/bin" >> $GITHUB_PATH     - name: Configure (CMake)
-        run: |
+         run: |
           cmake -Bbuild -S. \
             -DCMAKE_TOOLCHAIN_FILE=/usr/local/vitasdk/share/vita.toolchain.cmake
 
