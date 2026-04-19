@@ -14,23 +14,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Force latest Vita stubs + DEBUG check
+      - name: Install tools + Build fresh vita2d + stubs
         run: |
-          apt-get update && apt-get install -y git make curl
-          # Wipe old stubs completely
+          apt-get update && apt-get install -y git make cmake
+          
+          # Fresh stubs
           rm -rf /usr/local/vitasdk/arm-vita-eabi/lib/libSce*stub.a
-          # Fresh install
           git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
           cd /tmp/headers && make install
           git clone --depth=1 https://github.com/vitasdk/vita-libs.git /tmp/libs
           cd /tmp/libs && make install
-          # Force copy every stub
-          cp -v /tmp/libs/stubs/*.a /usr/local/vitasdk/arm-vita-eabi/lib/ || true
-          # DEBUG: show if our two missing stubs actually exist now
-          echo "=== DEBUG: Checking for the two missing stubs ==="
-          ls -la /usr/local/vitasdk/arm-vita-eabi/lib/ | grep -E 'SceFont|SceSharedFb' || echo "NOT FOUND"
+          
+          # Build vita2d from source (most reliable)
+          git clone --depth=1 https://github.com/vitasdk/vita2dlib.git /tmp/vita2d
+          cd /tmp/vita2d && make && make install
 
-      - name: Build
+      - name: Build Project
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build -- -j$(nproc)
