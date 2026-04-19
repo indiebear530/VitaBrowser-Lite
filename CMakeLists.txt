@@ -19,7 +19,6 @@ target_link_libraries(${PROJECT_NAME}
     SceAppMgr_stub
     SceSysmodule_stub
     SceCommonDialog_stub
-    SceFont_stub
     SceNet_stub
     SceNetCtl_stub
     SceHttp_stub
