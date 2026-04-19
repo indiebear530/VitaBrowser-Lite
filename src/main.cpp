@@ -26,9 +26,5 @@ index e2538acce150cffd9a1f1253a5489aae8396f603..b93f49468016fd03ad0ba0f9547b6a2f
      }
  
      vita2d_free_pgf(pgf);
-     vita2d_fini();
- 
--    sceAppMgrFinish(0);
--    sceKernelExitProcess(0);
      return 0;
  }
