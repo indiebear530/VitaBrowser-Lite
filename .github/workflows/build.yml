@@ -17,22 +17,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: apk add --no-cache make cmake ca-certificates openssl unzip curl
+      - name: Install build tools
+        run: apk add --no-cache make cmake curl unzip
 
-      - name: Install vita2dlib
+      - name: Build & install vita2dlib
         run: |
-          curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
+          curl -L -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
           cd /tmp/libvita2d-master/libvita2d
           make -j2
           make install
 
-      - name: Configure project
-        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
-
-      - name: Build project
-        run: cmake --build build -- -j2
+      - name: Configure & Build
+        run: |
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
+          cmake --build build -- -j2
 
       - name: Upload VPK
         uses: actions/upload-artifact@v4
