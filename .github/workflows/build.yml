@@ -18,9 +18,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: apk add --no-cache make cmake ca-certificates openssl unzip curl git
+        run: apk add --no-cache make cmake ca-certificates openssl unzip curl
 
-      - name: Build & install vita2dlib + all stubs
+      - name: Build & install vita2dlib + stubs (zip only)
         run: |
           # vita2dlib
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
@@ -29,9 +29,15 @@ jobs:
           make -j2
           make install
 
-          # Install fresh stubs (this is the key fix)
-          git clone --depth=1 https://github.com/vitasdk/vita-libs.git /tmp/libs
-          cd /tmp/libs
+          # vita-headers (zip)
+          curl -L -f --retry 5 -o /tmp/headers.zip https://github.com/vitasdk/vita-headers/archive/refs/heads/master.zip
+          unzip /tmp/headers.zip -d /tmp
+          cp -r /tmp/vita-headers-master/include/* /usr/local/vitasdk/arm-vita-eabi/include/
+
+          # vita-libs (stubs - zip)
+          curl -L -f --retry 5 -o /tmp/libs.zip https://github.com/vitasdk/vita-libs/archive/refs/heads/master.zip
+          unzip /tmp/libs.zip -d /tmp
+          cd /tmp/vita-libs-master
           make -j2
           make install
 
