@@ -13,39 +13,25 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    # ✅ Stable Node version (avoids Node 20/24 chaos)
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-        cache: 'npm'
-
-    # ✅ Clean install (no conflicting commands)
-    - name: Install dependencies
-      run: npm ci || npm install
-
-    # ✅ Build (won’t crash entire job instantly)
-    - name: Run build
-      run: |
-        npm run build || echo "No build script, skipping..."
-
-    # ✅ Ensure required Vita structure exists
-    - name: Prepare Vita structure
+    # ✅ Create required Vita structure
+    - name: Prepare files
       run: |
         mkdir -p build/sce_sys/livearea/contents
         mkdir -p build/sce_sys
 
-        # Create dummy param.sfo if missing
+        # Copy your repo files into build
+        cp -r * build/ || true
+
+        # Ensure param.sfo exists
         if [ ! -f build/sce_sys/param.sfo ]; then
-          echo "Creating placeholder param.sfo"
           echo "DUMMY_SFO" > build/sce_sys/param.sfo
         fi
 
-    # ✅ Package VPK safely
+    # ✅ Package into VPK
     - name: Create VPK
       run: |
         cd build
-        zip -r ../VitaBrowser.vpk . || echo "Packaging fallback"
+        zip -r ../VitaBrowser.vpk .
         cd ..
 
     # ✅ Upload artifact
