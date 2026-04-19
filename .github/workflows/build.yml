@@ -29,12 +29,12 @@ jobs:
           make -j2
           make install
 
-          # vita-headers (zip)
+          # vita-headers
           curl -L -f --retry 5 -o /tmp/headers.zip https://github.com/vitasdk/vita-headers/archive/refs/heads/master.zip
           unzip /tmp/headers.zip -d /tmp
           cp -r /tmp/vita-headers-master/include/* /usr/local/vitasdk/arm-vita-eabi/include/
 
-          # vita-libs (stubs - zip)
+          # vita-libs (stubs - including SceFont_stub)
           curl -L -f --retry 5 -o /tmp/libs.zip https://github.com/vitasdk/vita-libs/archive/refs/heads/master.zip
           unzip /tmp/libs.zip -d /tmp
           cd /tmp/vita-libs-master
