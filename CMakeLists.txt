@@ -57,7 +57,6 @@ index 3d0c41a8b47364095dbddc28391e13aa3753853e..50cf987f3d5234a435d4d45e42ef8a9c
  
  vita_create_vpk(${PROJECT_NAME}.vpk "VBRS00001" eboot.bin
      VERSION "01.00"
--    NAME "VitaBrowser Lite"
      FILE sce_sys sce_sys
  )
  
