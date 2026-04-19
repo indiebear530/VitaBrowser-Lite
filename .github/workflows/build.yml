@@ -1,27 +1,17 @@
-name: Build VitaSDK
+name: CI-Build
 
 on:
   pull_request:
     branches: [master, main]
   push:
     branches: [master, main]
-name: VitaSDK build
-
-on:
-  pull_request:
-    branches:
-      - master
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
   build-vpk:
     runs-on: ubuntu-latest
 
-    # Use the official VitaSDK container image directly.
-    # This avoids brittle "download latest release asset" parsing.
+    # Official VitaSDK image
     container:
       image: vitasdk/vitasdk:latest
 
@@ -35,30 +25,6 @@ jobs:
       - name: Show VitaSDK toolchain versions
         run: |
           echo "VITASDK=$VITASDK"
-      - name: Install official latest stable VitaSDK
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y curl jq xz-utils
-
-          ASSET_URL="$(curl -sSL https://api.github.com/repos/vitasdk/autobuilds/releases/latest \
-            | jq -r '.assets[] | select(.name | test("vitasdk-.*-linux\\.tar\\.gz$")) | .browser_download_url' \
-            | head -n1)"
-
-          if [ -z "${ASSET_URL}" ] || [ "${ASSET_URL}" = "null" ]; then
-            echo "Could not find VitaSDK Linux asset in latest release."
-            exit 1
-          fi
-
-          curl -L "${ASSET_URL}" -o vitasdk-linux.tar.gz
-          sudo mkdir -p /usr/local/vitasdk
-          sudo tar -xzf vitasdk-linux.tar.gz -C /usr/local/vitasdk --strip-components=1
-
-          echo "VITASDK=/usr/local/vitasdk" >> "$GITHUB_ENV"
-          echo "/usr/local/vitasdk/bin" >> "$GITHUB_PATH"
-
-      - name: Show VitaSDK toolchain versions
-        run: |
           arm-vita-eabi-gcc --version
           cmake --version
 
@@ -80,4 +46,3 @@ jobs:
           path: |
             build/eboot.bin
             build/VitaBrowserLite.vpk
-
