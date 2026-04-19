@@ -14,7 +14,7 @@ jobs:
       image: vitasdk/vitasdk:latest
 
     env:
-      VITASDK: /usr/local/vitasdk   # ← This fixes the configure error
+      VITASDK: /usr/local/vitasdk
 
     steps:
       - name: Checkout code
@@ -23,11 +23,19 @@ jobs:
       - name: Install build tools
         run: apk add --no-cache make cmake curl unzip
 
-      - name: Build & install vita2dlib
+      - name: Install vita2dlib + stubs (including SceFont_stub)
         run: |
+          # vita2dlib
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
           cd /tmp/libvita2d-master/libvita2d
+          make -j2
+          make install
+
+          # vita-libs (provides all _stub.a files)
+          curl -L -f --retry 5 -o /tmp/libs.zip https://github.com/vitasdk/vita-libs/archive/refs/heads/master.zip
+          unzip /tmp/libs.zip -d /tmp
+          cd /tmp/vita-libs-master
           make -j2
           make install
 
