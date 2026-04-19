@@ -12,16 +12,17 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    SceAppMgr_stub
-    SceProcessmgr_stub
     SceDisplay_stub
     SceCtrl_stub
+    SceTouch_stub
+    SceGxm_stub
+    SceAppMgr_stub
+    SceSysmodule_stub
+    SceCommonDialog_stub
+    SceFont_stub
     SceNet_stub
     SceNetCtl_stub
     SceHttp_stub
-    SceSysmem_stub
-    SceGxm_stub
-    SceCommonDialog_stub
     vita2d
 )
 
