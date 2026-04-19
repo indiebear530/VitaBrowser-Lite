@@ -1,38 +1,35 @@
-name: Build VPK
+name: Vita Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  build-vpk:
     runs-on: ubuntu-latest
     container:
       image: vitasdk/vitasdk:latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install tools + Build fresh vita2d + stubs
+      - name: Install dependencies
+        run: apk add --no-cache git make cmake
+
+      - name: Build and install vita2dlib
         run: |
-          apt-get update && apt-get install -y git make cmake
-          
-          # Fresh stubs
-          rm -rf /usr/local/vitasdk/arm-vita-eabi/lib/libSce*stub.a
-          git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
-          cd /tmp/headers && make install
-          git clone --depth=1 https://github.com/vitasdk/vita-libs.git /tmp/libs
-          cd /tmp/libs && make install
-          
-          # Build vita2d from source (most reliable)
           git clone --depth=1 https://github.com/vitasdk/vita2dlib.git /tmp/vita2d
-          cd /tmp/vita2d && make && make install
+          cd /tmp/vita2d && make -j2 && make install
+
+      - name: Configure Project
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
 
       - name: Build Project
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -- -j$(nproc)
+        run: cmake --build build -- -j2
 
       - name: Upload VPK
         uses: actions/upload-artifact@v4
