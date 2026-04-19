@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: apk add --no-cache make cmake ca-certificates openssl unzip curl git
 
-      - name: Build & install vita2dlib + fresh stubs
+      - name: Build & install vita2dlib + headers
         run: |
           # vita2dlib
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
@@ -29,9 +29,9 @@ jobs:
           make -j2
           make install
 
-          # Fresh vita-headers (includes SceFont_stub)
+          # Fresh headers (manual copy - current method)
           git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
-          cd /tmp/headers && make install
+          cp -r /tmp/headers/include/* /usr/local/vitasdk/arm-vita-eabi/include/
 
       - name: Configure project
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
