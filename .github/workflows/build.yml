@@ -20,18 +20,20 @@ jobs:
       - name: Install dependencies
         run: apk add --no-cache make cmake ca-certificates openssl unzip curl git
 
-      - name: Build & install vita2dlib + headers
+      - name: Build & install vita2dlib + all stubs
         run: |
-          # Install vita2dlib
+          # vita2dlib
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
           cd /tmp/libvita2d-master/libvita2d
           make -j2
           make install
 
-          # Install fresh headers (this is the important part)
-          git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
-          cp -r /tmp/headers/include/* /usr/local/vitasdk/arm-vita-eabi/include/
+          # Install fresh stubs (this is the key fix)
+          git clone --depth=1 https://github.com/vitasdk/vita-libs.git /tmp/libs
+          cd /tmp/libs
+          make -j2
+          make install
 
       - name: Configure project
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
