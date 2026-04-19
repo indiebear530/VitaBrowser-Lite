@@ -1,8 +1,8 @@
 target_link_libraries(${PROJECT_NAME}
     vita2d
     SceDisplay_stub
-    SceCtrl_stub
     SceGxm_stub
+    SceCtrl_stub
     SceSysmodule_stub
     SceCommonDialog_stub
     SceAppMgr_stub
@@ -12,4 +12,5 @@ target_link_libraries(${PROJECT_NAME}
     SceNetCtl_stub
     SceHttp_stub
     SceSysmem_stub
+    SceProcessmgr_stub
 )
