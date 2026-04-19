@@ -1,5 +1,6 @@
 #include <vita2d.h>
 #include <psp2/ctrl.h>
+#include <psp2/display.h>      // ← this is the missing one for sceDisplayWaitVblankStart
 #include <psp2/kernel/processmgr.h>
 
 vita2d_pgf *pgf;
