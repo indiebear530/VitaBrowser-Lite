@@ -29,6 +29,15 @@ jobs:
           arm-vita-eabi-gcc --version
           cmake --version
 
+      - name: Validate CMakeLists.txt
+        run: |
+          set -euo pipefail
+          head -n 5 CMakeLists.txt
+          if grep -nE '^(diff --git|--git\b)' CMakeLists.txt; then
+            echo "CMakeLists.txt contains patch/diff markers. Replace file with clean CMake syntax."
+            exit 1
+          fi
+
       - name: Configure
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
 
