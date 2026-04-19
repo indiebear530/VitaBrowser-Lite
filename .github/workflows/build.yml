@@ -1,0 +1,58 @@
+name: CI-Build
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build-vpk:
+    runs-on: ubuntu-latest
+
+    # Use the official VitaSDK container image directly.
+    # This avoids brittle "download latest release asset" parsing.
+    container:
+      image: vitasdk/vitasdk:latest
+
+    env:
+      VITASDK: /usr/local/vitasdk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show VitaSDK toolchain versions
+        run: |
+          echo "VITASDK=$VITASDK"
+          arm-vita-eabi-gcc --version
+          cmake --version
+
+      - name: Validate CMakeLists.txt
+        run: |
+          set -euo pipefail
+          head -n 5 CMakeLists.txt
+          if grep -nE '^(diff --git|--git\b)' CMakeLists.txt; then
+            echo "CMakeLists.txt contains patch/diff markers. Replace file with clean CMake syntax."
+            exit 1
+          fi
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+
+      - name: Build
+        run: cmake --build build -- -j"$(nproc)"
+
+      - name: Check expected outputs
+        run: |
+          test -f build/eboot.bin
+          test -f build/VitaBrowserLite.vpk
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: VitaBrowserLite-build
+          path: |
+            build/eboot.bin
+            build/VitaBrowserLite.vpk

@@ -6,7 +6,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include("${VITASDK}/share/vita.toolchain.cmake" REQUIRED)
+# Toolchain is expected to be provided via:
+#   -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+# (or equivalent in your preset/environment).
+#
+# Resolve VITASDK for vita.cmake in a robust way across local and CI setups.
+if(NOT DEFINED VITASDK AND DEFINED ENV{VITASDK})
+    set(VITASDK "$ENV{VITASDK}")
+endif()
+
+if(NOT DEFINED VITASDK)
+    message(FATAL_ERROR "VITASDK is not set. Export VITASDK and pass -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake")
+endif()
+
+include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
@@ -30,7 +43,6 @@ vita_create_self(eboot.bin ${PROJECT_NAME} UNSAFE)
 
 vita_create_vpk(${PROJECT_NAME}.vpk "VBRS00001" eboot.bin
     VERSION "01.00"
-    NAME "VitaBrowser Lite"
     FILE sce_sys sce_sys
 )
 
