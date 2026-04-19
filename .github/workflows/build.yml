@@ -9,17 +9,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: gnuton/vitasdk-docker:latest   # fresher base
+      image: vitasdk/vitasdk:latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update VitaSDK stubs (critical)
+      - name: Refresh all Vita stubs (most reliable method)
         run: |
-          apk update && apk add git make
-          git clone --depth 1 https://github.com/vitasdk/vita-headers.git /tmp/headers
+          apt-get update && apt-get install -y git make
+          git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
           cd /tmp/headers && make install
-          git clone --depth 1 https://github.com/vitasdk/vita-libs.git /tmp/libs
+          git clone --depth=1 https://github.com/vitasdk/vita-libs.git /tmp/libs
           cd /tmp/libs && make install
 
       - name: Build
@@ -30,5 +30,5 @@ jobs:
       - name: Upload VPK
         uses: actions/upload-artifact@v4
         with:
-          name: VitaBrowserLite
+          name: VitaBrowserLite-VPK
           path: build/*.vpk
