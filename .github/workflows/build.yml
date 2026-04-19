@@ -13,6 +13,9 @@ jobs:
     container:
       image: vitasdk/vitasdk:latest
 
+    env:
+      VITASDK: /usr/local/vitasdk   # ← This fixes the configure error
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,16 +25,17 @@ jobs:
 
       - name: Build & install vita2dlib
         run: |
-          curl -L -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
+          curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
           cd /tmp/libvita2d-master/libvita2d
           make -j2
           make install
 
-      - name: Configure & Build
-        run: |
-          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VITASDK}/share/vita.toolchain.cmake
-          cmake --build build -- -j2
+      - name: Configure project
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake
+
+      - name: Build project
+        run: cmake --build build -- -j2
 
       - name: Upload VPK
         uses: actions/upload-artifact@v4
