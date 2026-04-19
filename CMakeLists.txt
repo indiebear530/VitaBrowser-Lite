@@ -22,6 +22,7 @@ target_link_libraries(${PROJECT_NAME}
     SceNet_stub
     SceNetCtl_stub
     SceHttp_stub
+    SceFont_stub          # ← This was missing
     vita2d
 )
 
