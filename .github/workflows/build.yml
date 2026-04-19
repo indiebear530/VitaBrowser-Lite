@@ -3,25 +3,32 @@ name: Build VPK
 on:
   push:
     branches: [ main ]
-  pull_request:
   workflow_dispatch:
 
 jobs:
-  build-vpk:
+  build:
     runs-on: ubuntu-latest
     container:
-      image: gnuton/vitasdk-docker:latest   # ← Much more up-to-date
+      image: gnuton/vitasdk-docker:latest   # fresher base
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update VitaSDK stubs (critical)
+        run: |
+          apk update && apk add git make
+          git clone --depth 1 https://github.com/vitasdk/vita-headers.git /tmp/headers
+          cd /tmp/headers && make install
+          git clone --depth 1 https://github.com/vitasdk/vita-libs.git /tmp/libs
+          cd /tmp/libs && make install
+
       - name: Build
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -j$(nproc)
+          cmake --build build -- -j$(nproc)
 
-      - name: Upload artifact
+      - name: Upload VPK
         uses: actions/upload-artifact@v4
         with:
-          name: VitaBrowserLite-vpk
+          name: VitaBrowserLite
           path: build/*.vpk
