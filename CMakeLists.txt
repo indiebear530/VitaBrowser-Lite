@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 3d0c41a8b47364095dbddc28391e13aa3753853e..d3195adad91070be9976f5bb966b0c128940e393 100644
+index 3d0c41a8b47364095dbddc28391e13aa3753853e..50cf987f3d5234a435d4d45e42ef8a9cc39fb96f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1,38 +1,50 @@
+@@ -1,38 +1,58 @@
  cmake_minimum_required(VERSION 3.10)
  
  project(VitaBrowserLite LANGUAGES CXX)
@@ -19,6 +19,14 @@ index 3d0c41a8b47364095dbddc28391e13aa3753853e..d3195adad91070be9976f5bb966b0c12
 +# Resolve VITASDK for vita.cmake in a robust way across local and CI setups.
 +if(NOT DEFINED VITASDK AND DEFINED ENV{VITASDK})
 +    set(VITASDK "$ENV{VITASDK}")
++endif()
++
++if(NOT DEFINED VITASDK AND DEFINED CMAKE_TOOLCHAIN_FILE)
++    get_filename_component(_vita_share_dir "${CMAKE_TOOLCHAIN_FILE}" DIRECTORY)
++    get_filename_component(_vita_root_dir "${_vita_share_dir}" DIRECTORY)
++    if(EXISTS "${_vita_root_dir}/share/vita.cmake")
++        set(VITASDK "${_vita_root_dir}")
++    endif()
 +endif()
 +
 +if(NOT DEFINED VITASDK)
