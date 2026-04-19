@@ -18,17 +18,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: apk add --no-cache git make cmake ca-certificates openssl
+        run: apk add --no-cache make cmake ca-certificates openssl unzip curl
 
-      - name: Fix git HTTPS in container
+      - name: Build & install vita2dlib (using zip - more reliable)
         run: |
-          git config --global http.sslVerify false
-          git config --global url."https://github.com/".insteadOf git@github.com:
-
-      - name: Build & install vita2dlib
-        run: |
-          git clone --depth=1 https://github.com/vitasdk/vita2dlib.git /tmp/vita2d
-          cd /tmp/vita2d
+          curl -L -o /tmp/vita2d.zip https://github.com/vitasdk/vita2dlib/archive/refs/heads/master.zip
+          unzip /tmp/vita2d.zip -d /tmp
+          cd /tmp/vita2dlib-master
           make -j2
           make install
 
