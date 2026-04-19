@@ -12,5 +12,4 @@ target_link_libraries(${PROJECT_NAME}
     SceNetCtl_stub
     SceHttp_stub
     SceSysmem_stub
-    SceProcessmgr_stub
 )
