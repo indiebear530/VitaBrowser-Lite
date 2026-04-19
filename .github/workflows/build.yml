@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: apk add --no-cache make cmake ca-certificates openssl unzip curl
 
-      - name: Build & install vita2dlib (correct repo)
+      - name: Build & install vita2dlib
         run: |
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
-          cd /tmp/libvita2d-master
+          cd /tmp/libvita2d-master/libvita2d
           make -j2
           make install
 
