@@ -19,6 +19,7 @@ if(NOT DEFINED VITASDK)
     message(FATAL_ERROR "VITASDK is not set. Export VITASDK and pass -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake")
 endif()
 
+include("${VITASDK}/share/vita.toolchain.cmake" REQUIRED)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 add_executable(${PROJECT_NAME}

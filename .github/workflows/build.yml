@@ -13,6 +13,7 @@ jobs:
 
     # Use the official VitaSDK container image directly.
     # This avoids brittle "download latest release asset" parsing.
+    # Official VitaSDK image
     container:
       image: vitasdk/vitasdk:latest
 
