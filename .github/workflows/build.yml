@@ -24,7 +24,15 @@ jobs:
         run: |
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
+          
+          echo "=== Listing extracted files ==="
+          ls -la /tmp/libvita2d-master/
+          ls -la /tmp/libvita2d-master/libvita2d/
+          
           cd /tmp/libvita2d-master/libvita2d
+          echo "=== Current directory after cd ==="
+          ls -la
+          
           make -j2
           make install
 
