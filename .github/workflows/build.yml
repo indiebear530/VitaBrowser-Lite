@@ -22,14 +22,14 @@ jobs:
 
       - name: Build & install vita2dlib + headers
         run: |
-          # vita2dlib
+          # Install vita2dlib
           curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
           cd /tmp/libvita2d-master/libvita2d
           make -j2
           make install
 
-          # Fresh headers (manual copy - current method)
+          # Install fresh headers (this is the important part)
           git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
           cp -r /tmp/headers/include/* /usr/local/vitasdk/arm-vita-eabi/include/
 
