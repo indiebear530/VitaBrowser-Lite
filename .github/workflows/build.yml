@@ -20,17 +20,11 @@ jobs:
       - name: Install dependencies
         run: apk add --no-cache make cmake ca-certificates openssl unzip curl
 
-      - name: Build & install vita2dlib (robust download)
+      - name: Build & install vita2dlib (correct repo)
         run: |
-          curl -L -f --retry 5 --retry-delay 5 -H "User-Agent: Mozilla/5.0" \
-            -o /tmp/vita2d.zip https://github.com/vitasdk/vita2dlib/archive/refs/heads/master.zip
-          
-          # Verify the file is actually a zip
-          file /tmp/vita2d.zip
-          ls -l /tmp/vita2d.zip
-          
+          curl -L -f --retry 5 -o /tmp/vita2d.zip https://github.com/xerpi/libvita2d/archive/refs/heads/master.zip
           unzip /tmp/vita2d.zip -d /tmp
-          cd /tmp/vita2dlib-master
+          cd /tmp/libvita2d-master
           make -j2
           make install
 
