@@ -35,7 +35,6 @@ int main()
     vita2d_free_pgf(pgf);
     vita2d_fini();
 
-    sceAppMgrFinish(0);
     sceKernelExitProcess(0);
     return 0;
 }
