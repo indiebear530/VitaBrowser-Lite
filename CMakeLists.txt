@@ -24,7 +24,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 vita_create_self(eboot.bin ${PROJECT_NAME} UNSAFE)
-vita_create_vpk(${PROJECT_NAME}.vpk "VBRS00001" eboot.bin
+vita_create_vpk(${PROJECT_NAME}.vpk "VBRS55561" eboot.bin
     VERSION "01.00"
     NAME "VitaBrowser Lite"
     FILE sce_sys sce_sys
