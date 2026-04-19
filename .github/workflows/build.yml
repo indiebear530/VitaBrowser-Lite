@@ -14,13 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Refresh all Vita stubs (most reliable method)
+      - name: Install tools + Force latest Vita stubs
         run: |
-          apt-get update && apt-get install -y git make
+          apt-get update && apt-get install -y git make curl
+          # Force fresh headers and libs
+          rm -rf /usr/local/vitasdk/arm-vita-eabi/lib/*.a /usr/local/vitasdk/arm-vita-eabi/include/*
           git clone --depth=1 https://github.com/vitasdk/vita-headers.git /tmp/headers
           cd /tmp/headers && make install
           git clone --depth=1 https://github.com/vitasdk/vita-libs.git /tmp/libs
           cd /tmp/libs && make install
+          # Extra safety: copy stubs manually
+          cp -v /tmp/libs/stubs/*.a /usr/local/vitasdk/arm-vita-eabi/lib/ 2>/dev/null || true
 
       - name: Build
         run: |
