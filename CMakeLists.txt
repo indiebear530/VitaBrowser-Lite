@@ -3,7 +3,7 @@ project(VitaBrowserLite LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Only include vita.cmake (toolchain is provided via -DCMAKE_TOOLCHAIN_FILE in build commands/CI)
+# Only include vita.cmake (toolchain is passed via command line / CI)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
 
 add_executable(${PROJECT_NAME}
@@ -20,7 +20,7 @@ target_link_libraries(${PROJECT_NAME}
     SceNet_stub
     SceNetCtl_stub
     SceHttp_stub
-    ScePgf_stub          # Added: required for vita2d_pgf functions
+    ScePgf_stub          # ← Fixed: required for vita2d_pgf functions
 )
 
 vita_create_self(eboot.bin ${PROJECT_NAME} UNSAFE)
