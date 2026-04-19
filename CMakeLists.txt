@@ -7,7 +7,6 @@ target_link_libraries(${PROJECT_NAME}
     SceCommonDialog_stub
     SceAppMgr_stub
     SceFont_stub
-    SceSharedFb_stub
     SceNet_stub
     SceNetCtl_stub
     SceHttp_stub
